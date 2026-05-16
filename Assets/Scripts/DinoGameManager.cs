@@ -10,6 +10,8 @@ public enum DinoGameState
 
 public class DinoGameManager : MonoBehaviour
 {
+    private const string BestScoreKey = "DinoBestScore";
+
     public static DinoGameManager Instance { get; private set; }
 
     [SerializeField] private float baseSpeed = 6f;
@@ -37,8 +39,8 @@ public class DinoGameManager : MonoBehaviour
         }
 
         Instance = this;
+        BestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
         ResetRun();
-        Debug.Log("[DinoGameManager] Awake -> reset run");
     }
 
     private void OnDestroy()
@@ -69,7 +71,7 @@ public class DinoGameManager : MonoBehaviour
                 Score += add;
                 if (Score > BestScore)
                 {
-                    BestScore = Score;
+                    SetBestScore(Score);
                 }
             }
         }
@@ -85,7 +87,6 @@ public class DinoGameManager : MonoBehaviour
         ResetRun();
         State = DinoGameState.Playing;
         CurrentSpeed = baseSpeed;
-        Debug.Log($"[DinoGameManager] StartRun speed={CurrentSpeed:0.00}");
     }
 
     public void GameOver(string reason = null)
@@ -98,10 +99,8 @@ public class DinoGameManager : MonoBehaviour
         State = DinoGameState.GameOver;
         if (Score > BestScore)
         {
-            BestScore = Score;
+            SetBestScore(Score);
         }
-
-        Debug.Log($"[DinoGameManager] GameOver score={Score} best={BestScore} reason={(string.IsNullOrWhiteSpace(reason) ? "unknown" : reason)}");
     }
 
     private void ResetRun()
@@ -111,6 +110,18 @@ public class DinoGameManager : MonoBehaviour
         elapsedTime = 0f;
         pointAccumulator = 0f;
         CurrentSpeed = baseSpeed;
+    }
+
+    private void SetBestScore(int value)
+    {
+        if (value <= BestScore)
+        {
+            return;
+        }
+
+        BestScore = value;
+        PlayerPrefs.SetInt(BestScoreKey, BestScore);
+        PlayerPrefs.Save();
     }
 
     private static void RestartCurrentScene()

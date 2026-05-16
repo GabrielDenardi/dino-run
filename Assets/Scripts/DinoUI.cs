@@ -25,7 +25,7 @@ public class DinoUI : MonoBehaviour
         scoreText.text = $"SCORE {manager.Score:0000}";
         bestText.text = $"BEST {manager.BestScore:0000}";
         messageText.text = manager.IsGameOver
-            ? "GAME OVER\nPressione R para reiniciar"
-            : "Espaco / W / Seta para cima para pular";
+            ? "GAME OVER  |  PRESSIONE R PARA REINICIAR"
+            : "PULAR: ESPACO / W / SETA PARA CIMA";
     }
 }

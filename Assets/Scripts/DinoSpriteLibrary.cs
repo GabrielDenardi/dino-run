@@ -51,7 +51,6 @@ public static class DinoSpriteLibrary
             return sprites[0];
         }
 
-        Debug.LogWarning($"No sprites found at Resources/{resourcePath}");
         return CreateFallbackSprite();
     }
 
@@ -66,7 +65,6 @@ public static class DinoSpriteLibrary
         var texture = Resources.Load<Texture2D>(resourcePath);
         if (texture == null)
         {
-            Debug.LogWarning($"No texture found at Resources/{resourcePath}");
             return CreateFallbackSprite();
         }
 
@@ -91,7 +89,6 @@ public static class DinoSpriteLibrary
         var texture = Resources.Load<Texture2D>(resourcePath);
         if (texture == null)
         {
-            Debug.LogWarning($"No texture found at Resources/{resourcePath}");
             return CreateFallbackSprite();
         }
 

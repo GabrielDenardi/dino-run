@@ -18,7 +18,6 @@ public class DinoController : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody>();
-        Debug.Log("[DinoController] Awake");
     }
 
     private void Update()
@@ -40,7 +39,6 @@ public class DinoController : MonoBehaviour
                 body.linearVelocity = Vector3.zero;
                 body.angularVelocity = Vector3.zero;
                 body.constraints = RigidbodyConstraints.FreezeAll;
-                Debug.Log("[DinoController] Enter dead state");
             }
 
             return;
@@ -56,7 +54,6 @@ public class DinoController : MonoBehaviour
         {
             grounded = false;
             body.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            Debug.Log("[DinoController] Jump");
         }
 
         moveAxis = GetHorizontalInput();
@@ -145,7 +142,6 @@ public class DinoController : MonoBehaviour
 
         if (collision.collider.CompareTag("Obstacle"))
         {
-            Debug.Log($"[DinoController] Hit obstacle={collision.collider.name} contacts={collision.contactCount}");
             var manager = DinoGameManager.Instance;
             if (manager != null)
             {

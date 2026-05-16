@@ -50,6 +50,7 @@ public class DinoBootstrapper : MonoBehaviour
         EnsureMaterials();
         BuildLighting();
         BuildCamera();
+        BuildBackdrop();
         BuildWorld();
         BuildGameplay();
         BuildUI();
@@ -121,7 +122,7 @@ public class DinoBootstrapper : MonoBehaviour
         camera.nearClipPlane = 0.1f;
         camera.farClipPlane = 50f;
 
-        cameraObject.transform.position = new Vector3(0f, 0.5f, -10f);
+        cameraObject.transform.position = new Vector3(0f, 2f, -10f);
     }
 
     private static void BuildWorld()
@@ -157,6 +158,57 @@ public class DinoBootstrapper : MonoBehaviour
             var scaleX = 80f / Mathf.Max(0.01f, groundSprite.bounds.size.x);
             grassVisual.transform.localScale = new Vector3(scaleX, 0.7f, 1f);
         }
+    }
+
+    private static void BuildBackdrop()
+    {
+        var backdrop = new GameObject("Backdrop");
+
+        CreateBackdropLayer(backdrop.transform, "Summer8Layer1", "Art/Backgrounds/Summer8_Layer1", new Vector3(0f, 1.9f, 12f), -30, 1.0f);
+        CreateBackdropLayer(backdrop.transform, "Summer8Layer2", "Art/Backgrounds/Summer8_Layer2", new Vector3(0f, 2.1f, 11.5f), -29, 1.02f);
+        CreateBackdropLayer(backdrop.transform, "Summer8Layer3", "Art/Backgrounds/Summer8_Layer3", new Vector3(0f, 2.4f, 11f), -28, 1.04f);
+    }
+
+    private static void CreateBackdropLayer(
+        Transform parent,
+        string name,
+        string resourcePath,
+        Vector3 position,
+        int sortingOrder,
+        float scaleMultiplier)
+    {
+        var layer = new GameObject(name);
+        layer.transform.SetParent(parent, false);
+        layer.transform.position = position;
+
+        var renderer = layer.AddComponent<SpriteRenderer>();
+        renderer.sprite = CreateBackdropSprite(resourcePath);
+        renderer.sortingOrder = sortingOrder;
+
+        if (renderer.sprite != null)
+        {
+            var camera = Camera.main;
+            var height = camera != null ? camera.orthographicSize * 2f : 11f;
+            var width = height * (camera != null ? camera.aspect : 16f / 9f);
+            var spriteWidth = renderer.sprite.bounds.size.x;
+            var spriteHeight = renderer.sprite.bounds.size.y;
+            var scale = Mathf.Max(width / Mathf.Max(0.01f, spriteWidth), height / Mathf.Max(0.01f, spriteHeight));
+            layer.transform.localScale = Vector3.one * (scale * scaleMultiplier);
+        }
+    }
+
+    private static Sprite CreateBackdropSprite(string resourcePath)
+    {
+        var texture = Resources.Load<Texture2D>(resourcePath);
+        if (texture == null)
+        {
+            return null;
+        }
+
+        texture.filterMode = FilterMode.Point;
+        texture.wrapMode = TextureWrapMode.Clamp;
+
+        return Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
     }
 
     private static void BuildGameplay()
@@ -213,13 +265,36 @@ public class DinoBootstrapper : MonoBehaviour
         scaler.matchWidthOrHeight = 0.5f;
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        var hudObject = new GameObject("HUD");
+        var hudObject = new GameObject("HUD", typeof(RectTransform));
         hudObject.transform.SetParent(canvasObject.transform, false);
+        var hudRect = hudObject.GetComponent<RectTransform>();
+        hudRect.anchorMin = Vector2.zero;
+        hudRect.anchorMax = Vector2.one;
+        hudRect.offsetMin = Vector2.zero;
+        hudRect.offsetMax = Vector2.zero;
+
         var hud = hudObject.AddComponent<DinoUI>();
 
-        var scoreText = CreateText(hudObject.transform, "ScoreText", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -20f), 24, TextAnchor.UpperLeft);
-        var bestText = CreateText(hudObject.transform, "BestText", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -20f), 20, TextAnchor.UpperRight);
-        var messageText = CreateText(hudObject.transform, "MessageText", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, 24, TextAnchor.MiddleCenter);
+        var topBarObject = new GameObject("TopBar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        topBarObject.transform.SetParent(hudObject.transform, false);
+
+        var topBarRect = topBarObject.GetComponent<RectTransform>();
+        topBarRect.anchorMin = new Vector2(0f, 1f);
+        topBarRect.anchorMax = new Vector2(1f, 1f);
+        topBarRect.pivot = new Vector2(0.5f, 1f);
+        topBarRect.anchoredPosition = Vector2.zero;
+        topBarRect.sizeDelta = new Vector2(0f, 96f);
+
+        var topBarImage = topBarObject.GetComponent<Image>();
+        topBarImage.color = new Color(0.08f, 0.1f, 0.16f, 0.82f);
+
+        var bestText = CreateText(topBarObject.transform, "BestText", new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(28f, 0f), 28, TextAnchor.MiddleLeft);
+        var messageText = CreateText(topBarObject.transform, "MessageText", new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f), 22, TextAnchor.MiddleCenter);
+        var scoreText = CreateText(topBarObject.transform, "ScoreText", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(-28f, 0f), 34, TextAnchor.MiddleRight);
+
+        bestText.rectTransform.sizeDelta = new Vector2(320f, 96f);
+        messageText.rectTransform.sizeDelta = new Vector2(760f, 96f);
+        scoreText.rectTransform.sizeDelta = new Vector2(320f, 96f);
 
         hud.Bind(scoreText, bestText, messageText);
     }
@@ -249,9 +324,18 @@ public class DinoBootstrapper : MonoBehaviour
         text.fontSize = fontSize;
         text.fontStyle = FontStyle.Bold;
         text.alignment = alignment;
-        text.color = new Color(0.12f, 0.12f, 0.12f);
+        text.color = Color.white;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Overflow;
+
+        var outline = textObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0.02f, 0.03f, 0.05f, 0.95f);
+        outline.effectDistance = new Vector2(2f, -2f);
+
+        var shadow = textObject.AddComponent<Shadow>();
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
+        shadow.effectDistance = new Vector2(0f, -3f);
+
         return text;
     }
 }

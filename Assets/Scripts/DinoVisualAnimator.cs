@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class DinoVisualAnimator : MonoBehaviour
 {
-    [SerializeField] private bool debugLogs = true;
-
     private SpriteRenderer spriteRenderer;
     private DinoController controller;
     private Rigidbody body;
@@ -34,15 +32,6 @@ public class DinoVisualAnimator : MonoBehaviour
         jumpFrames = frames.WhereFrames("Jump");
         deadFrames = frames.WhereFrames("Dead");
         fallbackSprite = DinoSpriteLibrary.GetAnySprite("Art/External/FreeDinoSprite/png");
-
-        if (debugLogs)
-        {
-            var idlePreview = idleFrames != null ? string.Join(", ", idleFrames.Take(3).Select(frame => frame.name)) : "";
-            var runPreview = runFrames != null ? string.Join(", ", runFrames.Take(3).Select(frame => frame.name)) : "";
-            var jumpPreview = jumpFrames != null ? string.Join(", ", jumpFrames.Take(3).Select(frame => frame.name)) : "";
-            var deadPreview = deadFrames != null ? string.Join(", ", deadFrames.Take(3).Select(frame => frame.name)) : "";
-            Debug.Log($"[DinoVisualAnimator] Loaded frames idle={idleFrames?.Length ?? 0} run={runFrames?.Length ?? 0} jump={jumpFrames?.Length ?? 0} dead={deadFrames?.Length ?? 0} fallback={(fallbackSprite != null ? fallbackSprite.name : "null")} | idle=[{idlePreview}] run=[{runPreview}] jump=[{jumpPreview}] dead=[{deadPreview}]");
-        }
 
         if (spriteRenderer != null)
         {
@@ -83,7 +72,6 @@ public class DinoVisualAnimator : MonoBehaviour
             {
                 currentSprite = fallbackSprite;
                 spriteRenderer.sprite = currentSprite;
-                LogFrameState("fallback", currentSprite);
             }
 
             return;
@@ -96,11 +84,6 @@ public class DinoVisualAnimator : MonoBehaviour
             frameIndex = 0;
             frameTimer = 0f;
             currentSprite = null;
-
-            if (debugLogs)
-            {
-                Debug.Log($"[DinoVisualAnimator] State={stateName} frames={frames.Length} speed={speed:0.00}");
-            }
         }
 
         var frameDuration = 1f / Mathf.Max(1f, speed);
@@ -108,7 +91,7 @@ public class DinoVisualAnimator : MonoBehaviour
         while (frameTimer >= frameDuration)
         {
             frameTimer -= frameDuration;
-            if (stateName == "Jump")
+            if (stateName == "Jump" || stateName == "Dead")
             {
                 frameIndex = Mathf.Min(frameIndex + 1, frames.Length - 1);
             }
@@ -124,20 +107,9 @@ public class DinoVisualAnimator : MonoBehaviour
         {
             currentSprite = frame;
             spriteRenderer.sprite = frame;
-            LogFrameState(stateName, frame);
         }
 
         wasGrounded = grounded;
-    }
-
-    private void LogFrameState(string stateName, Sprite frame)
-    {
-        if (!debugLogs || frame == null)
-        {
-            return;
-        }
-
-        Debug.Log($"[DinoVisualAnimator] Apply state={stateName} sprite={frame.name}");
     }
 
     private string GetCurrentStateName()
